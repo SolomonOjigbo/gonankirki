@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState, useContext, useEffect } from "react";
-import { KeyboardArrowDown } from "@mui/icons-material";
+import { KeyboardArrowDown, PhotoCamera } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -19,7 +19,7 @@ import {
 import { useFormik } from "formik";
 import * as Yup from "yup";
 
-import { H6 } from "components/typography";
+import { H6, Paragraph } from "components/typography";
 import { DropZone } from "components/dropzone";
 import FlexBox from "components/flexbox/FlexBox";
 import { QuillEditor } from "components/quill-editor";
@@ -35,6 +35,10 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { collection, addDoc } from "firebase/firestore";
 import { AuthContext } from "contexts/firebaseContext";
+import useNavigate from "hooks/useNavigate";
+
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import Image from "next/image";
 
 const cropOptions = [
   { label: "Ginger", value: "Ginger" },
@@ -53,10 +57,12 @@ const specifications = [
 ];
 
 const CreateProductPageView = () => {
-  const [files, setFiles] = useState([]);
-  const { registeredFarmers } = useFetchFarmers();
-  const { user, db } = useContext(AuthContext);
-  const [formData, setFormData] = useState({
+  
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [downloadURL, setDownloadURL] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const { user, db, storage } = useContext(AuthContext);
+  const initialValues = {
     cropProduced: "",
     dateOfAvailability: "",
     dateSubmitted: "",
@@ -68,49 +74,15 @@ const CreateProductPageView = () => {
     remarks: "",
     price: "",
     specifications: [],
-  });
-  const {loading, findCropAvailabilityById} = useFetchFarmers();
-
-
-  useEffect(()=> {
-    const getProduct = async()=> {
-     try {
-       const item = await findCropAvailabilityById(id);
-       setFormData(item);
-       console.log(item);
- 
-     } catch (error) {
-       console.error("Failed to fetch product:", error);
-     }
-   };
-   getProduct();
-   
- },[findCropAvailabilityById, id])
- 
- console.log(product);
-
- if (loading) {
-   return (
-     <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-       <CircularProgress />
-     </Box>
-   );
- }
-
-  const handleDropFile = useCallback((acceptedFiles) => {
-    const files = acceptedFiles.map((file) =>
-      Object.assign(file, {
-        preview: URL.createObjectURL(file),
-      })
-    );
-    setFiles(files);
-  }, []);
+    imageUrl: "",
+    farmerId:""
+  };
+  const {loading, registeredFarmers} = useFetchFarmers();
+  const navigate = useNavigate();
 
   const validationSchema = Yup.object({
     cropProduced: Yup.string().required("Crop Produced is Required!"),
-    farmer: Yup.object().shape({
-      farmerName: Yup.string().required("Name of Farmer is Required!"),
-    }),
+    farmerId: Yup.string().required("Name of Farmer is Required!"),
     price: Yup.string().required("Price is Required!"),
     specifications: Yup.array().of(Yup.string()).required("Crop Specifications is Required!"),
     dateOfAvailability: Yup.string().required("Date of Availability is Required!"),
@@ -118,7 +90,6 @@ const CreateProductPageView = () => {
     remarks: Yup.string().required("Remarks is Required!"),
   });
 
-  const initialValues = {formData};
 
   const {
     values,
@@ -127,6 +98,7 @@ const CreateProductPageView = () => {
     handleBlur,
     handleChange,
     handleSubmit,
+    setValues,
     setFieldValue,
   } = useFormik({
     initialValues,
@@ -136,14 +108,60 @@ const CreateProductPageView = () => {
     },
   });
 
+  const handleDropFile = (acceptedFiles) => {
+    const files = acceptedFiles.map((file) =>
+      Object.assign(file, {
+        preview: URL.createObjectURL(file),
+      })
+    );
+    setSelectedFile(files[0]);
+    setFieldValue("imageUrl", files[0]?.preview)
+  }
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      toast("No file selected");
+      return;
+    }
+    const fileName = `cropCommodity/${Date.now()}.jpg`;
+    const storageRef = ref(storage, fileName);
+
+    try {
+      const uploadTask = uploadBytesResumable(storageRef, selectedFile);
+
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        },
+        (error) => {
+          toast(`Upload failed: ${error.message}`);
+        },
+        async () => {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          console.log("URL", url);
+          setDownloadURL(url);
+         
+        }
+      );
+      return downloadURL;
+    } catch (error) {
+      toast(`Unexpected error: ${error.message}`);
+    }
+  };
+
+
+  const handleCancel = () => {
+    navigate('/dashboard/')
+  }
+
   const handleSubmitForm = async (values) => {
+    const url = await handleUpload();
     if (!user) {
       toast.error("User not authenticated");
       return;
     }
-
-    const userId = values.farmer.userId;
-    const farmerId = values.farmer.id;
+    
 
     const dateSubmitted = format(new Date(), "dd/MM/yyyy");
     try {
@@ -151,31 +169,33 @@ const CreateProductPageView = () => {
         collection(
           db,
           "users",
-          userId,
+          user.id,
           "farmers",
-          farmerId,
+          values.farmerId,
           "CropAvailability"
         ),
         {
+          ...values,
           cropProduced: values.cropProduced,
           quantityAvailable: values.quantityAvailable,
           dateOfAvailability: values.dateOfAvailability,
-          userId: userId,
-          farmerId: farmerId,
-          farmerName: values.farmer.farmerName,
+          userId: user.id,
+          farmerId: values.farmerId,
           dateSubmitted: dateSubmitted,
           remarks: values.remarks,
           price: values.price,
           specifications: values.specifications,
+          photoUrl: url || downloadURL,
         }
       );
       toast.success("Form Submitted successfully! Thank you!");
-      window.location.reload();
+      navigate("/dashboard/products/crop-availability-data")
     } catch (error) {
       console.error("Error adding document: ", error);
       toast.error("Failed to Submit Form");
     }
   };
+
 
   return (
     <Box pt={2} pb={4}>
@@ -218,10 +238,7 @@ const CreateProductPageView = () => {
                         onChange={handleChange}
                         value={values.cropProduced}
                         error={Boolean(touched.cropProduced && errors.cropProduced)}
-                        SelectProps={{
-                          native: true,
-                          IconComponent: KeyboardArrowDown,
-                        }}
+                        
                       >
                         {cropOptions.map((crop, index) => (
                           <MenuItem key={index} value={crop.value}>
@@ -235,20 +252,14 @@ const CreateProductPageView = () => {
                       <InputLabel id="farmer">Select Farmer</InputLabel>
                       <Select
                         fullWidth
-                        value={values.farmer.id}
+                        value={values.farmerId}
                         onBlur={handleBlur}
-                        name="farmer"
+                        name="farmerId"
                         onChange={(event) => {
-                          const farmer = registeredFarmers.find(
-                            (farmer) => farmer.id === event.target.value
-                          );
-                          setFieldValue("farmer", farmer);
+                          setFieldValue("farmerId", event.target.value);
                         }}
                         error={Boolean(touched.farmer?.id && errors.farmer?.farmerName)}
-                        SelectProps={{
-                          native: true,
-                          IconComponent: KeyboardArrowDown,
-                        }}
+                        
                       >
                         {registeredFarmers.map((farmer) => (
                           <MenuItem key={farmer.id} value={farmer.id}>
@@ -292,6 +303,13 @@ const CreateProductPageView = () => {
                     <Grid item xs={12}>
                       <Card>
                         <DropZone onDrop={handleDropFile} />
+                        
+
+                        {
+                        (values?.imageUrl !==undefined || values?.imageUrl !==null) ?
+                        (<Image src={values?.imageUrl} alt={values?.cropProduced} height={150} width={150}/>) : <PhotoCamera sx={{ fontSize: 100, color: "grey.400" }} />
+                      }
+                      {uploadProgress > 0 && <Paragraph>Upload Progress: {uploadProgress}%</Paragraph>}
                       </Card>
                     </Grid>
                   </Grid>
@@ -329,10 +347,7 @@ const CreateProductPageView = () => {
                             ))}
                           </Stack>
                         )}
-                        SelectProps={{
-                          native: true,
-                          IconComponent: KeyboardArrowDown,
-                        }}
+                     
                       >
                         {specifications.map((spec, index) => (
                           <MenuItem key={index} value={spec.value}>
@@ -363,7 +378,7 @@ const CreateProductPageView = () => {
                 Submit Form
               </Button>
 
-              <Button variant="outlined" color="secondary">
+              <Button variant="outlined" color="secondary" onClick={handleCancel}>
                 Cancel
               </Button>
             </FlexBox>

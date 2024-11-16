@@ -3,7 +3,6 @@
 import { useCallback, useState, useContext, useEffect, useMemo } from "react";
 import { KeyboardArrowDown, PhotoCamera } from "@mui/icons-material";
 import {
-  Avatar,
   Box,
   Button,
   Card,
@@ -64,7 +63,8 @@ const EditProductPageView = () => {
     remarks: "",
     price: "",
     specifications: [],
-    imageUrl: null
+    imageUrl: null,
+    farmerId: ""
   };
   const validationSchema = Yup.object({
     cropProduced: Yup.string().required("Crop Produced is Required!"),
@@ -99,11 +99,8 @@ const EditProductPageView = () => {
 
   const getProduct = async () => {
     try {
-      const item = findCropAvailabilityById(id);
-      if( id !== undefined){
-        
-      
-        
+      const item = await findCropAvailabilityById(id);
+      if( item){
         setValues(item)
       }
     } catch (error) {
@@ -262,14 +259,15 @@ const EditProductPageView = () => {
                       <InputLabel id="farmer">Select Farmer</InputLabel>
                       <Select
                         fullWidth
-                        value={values?.farmer}
+                        value={values?.farmerId || ""}
                         onBlur={handleBlur}
-                        name="farmer"
-                        onChange={(e) => setFieldValue("farmer", registeredFarmers.find(farmer => farmer.id === e.target.value))}
-
-                        renderValue={() => farmer?.farmerName || "Select Farmer"}
+                        name="farmerId"
+                        onChange={(event) => {
+                          setFieldValue("farmerId", event.target.value);
+                        }}
+                        error={Boolean(touched.farmer?.id && errors.farmer?.farmerName)}
+                        
                       >
-
                         {registeredFarmers.map((farmer) => (
                           <MenuItem key={farmer.id} value={farmer.id}>
                             {farmer.farmerName}

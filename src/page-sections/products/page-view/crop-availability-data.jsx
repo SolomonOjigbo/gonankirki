@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Tab, Box, Tabs, Card, Table, styled, Button, TableBody, TableContainer, TablePagination, CircularProgress } from "@mui/material";
 import Add from "icons/Add"; // CUSTOM DEFINED HOOK
 
@@ -19,6 +19,10 @@ import ProductTableActions from "../ProductTableActions"; // CUSTOM DUMMY DATA
 // import { PRODUCTS } from "__fakeData__/products"; //  STYLED COMPONENTS
 import useFetchFarmers from "hooks/useFetchFarmers";
 import { id } from "date-fns/locale";
+import "react-toastify/dist/ReactToastify.css";
+import { toast, ToastContainer } from "react-toastify";
+import { deleteDoc, doc } from "firebase/firestore";
+import { AuthContext } from "contexts/firebaseContext";
 
 const ListWrapper = styled(FlexBetween)(({
   theme
@@ -35,8 +39,8 @@ const ListWrapper = styled(FlexBetween)(({
 const ProductListPageView = () => {
   const navigate = useNavigate();
   const {cropAvailabilityData, loading,error } = useFetchFarmers();
-  const [cropsInfo, setCropsInfo] = useState(cropAvailabilityData);
-  console.log('Crop Availability Data:', cropAvailabilityData); // Debugging statement
+  const [cropsInfo, setCropsInfo] = useState([...cropAvailabilityData]);
+  const {db} = useContext(AuthContext)
 
   // if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -71,9 +75,28 @@ const ProductListPageView = () => {
     if (productFilter.farmerName) return item.farmerName.toLowerCase() ===productFilter.farmerName; else if(productFilter.search) return  item.farmerName.toLowerCase().includes(productFilter.farmerName.toLowerCase());else return true;
   });
 
-  // const handleDeleteProduct = id => {
-  //   setCropsInfo(state => state.filter(item => item.id !== id));
-  // };
+  const handleDeleteProduct = async(userId, farmerId, id) => {
+    try {
+    const productDocRef = doc(db, 'users', userId, 'farmers', farmerId, 'CropAvailability', id);
+    
+     const isDeleted =  await deleteDoc(productDocRef)
+    
+
+    // Remove deleted farmer from state
+    if(isDeleted){
+
+      toast.success('Commodity deleted successfully!');
+      setCropsInfo(state => state.filter(item => item.id !== id));
+    }
+    
+  
+  } catch (error) {
+    // console.error('Error deleting farmer:', error);
+    toast('Failed to delete Commodity');
+  }
+  
+
+  };
 
   // const handleAllProductDelete = () => {
   //   setCropsInfo(state => state.filter(item => !selected.includes(item.id)));
@@ -89,6 +112,18 @@ const ProductListPageView = () => {
   }
 
   return <Box pt={2} pb={4}>
+    <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+          />
       <ListWrapper>
         
         
@@ -122,7 +157,7 @@ const ProductListPageView = () => {
               <ProductTableHead order={order} orderBy={orderBy} numSelected={selected.length} rowCount={cropAvailabilityData.length} onRequestSort={handleRequestSort} onSelectAllRows={handleSelectAllRows(cropAvailabilityData.map(row => row.id))} />
 
               <TableBody>
-                {cropAvailabilityData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(product => <ProductTableRow key={product.id} product={product} handleSelectRow={handleSelectRow} isSelected={isSelected(product.id)} />)}
+                {cropAvailabilityData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(product => <ProductTableRow key={product.id} product={product} handleSelectRow={handleSelectRow} isSelected={isSelected(product.id)} handleDeleteProduct={handleDeleteProduct} />)}
 
                 {cropAvailabilityData.length === 0 &&   <TableDataNotFound />}
               </TableBody>

@@ -95,7 +95,7 @@ const ProductTableRow = ({
         }} />
           <TableMoreMenuItem Icon={DeleteOutline} title="Delete" handleClick={() => {
           handleCloseOpenMenu();
-          handleDeleteProduct(product?.id);
+          handleDeleteProduct(product?.userId, product?.farmerId, product?.id);
         }} />
         </TableMoreMenu>
       </TableCell>
