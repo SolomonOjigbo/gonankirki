@@ -4,10 +4,11 @@ import { Paragraph } from "components/typography";
 import { FlexRowAlign } from "components/flexbox";
 import { AvatarLoading } from "components/avatar-loading";
 import { getAuth, signOut } from "firebase/auth";
+import useAuth from "hooks/useAuth";
 
 const UserAccount = () => {
-  const auth = getAuth();
-  const user = auth.currentUser
+  // const auth = getAuth();
+  const {user} = useAuth();
   return <FlexRowAlign flexDirection="column" py={5}>
       <Badge badgeContent="Free" color="primary">
         <AvatarLoading alt="user" percentage={60} src={user.photoURL} sx={{

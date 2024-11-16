@@ -174,6 +174,7 @@ export const AuthProvider = ({ children }) => {
         signInWithEmailLink,
         db,
         storage,
+        user: state.user
       }}
     >
       {children}

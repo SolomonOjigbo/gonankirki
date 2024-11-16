@@ -3,6 +3,7 @@
 import { useCallback, useState, useContext, useEffect, useMemo } from "react";
 import { KeyboardArrowDown, PhotoCamera } from "@mui/icons-material";
 import {
+  Avatar,
   Box,
   Button,
   Card,
@@ -61,7 +62,7 @@ const EditProductPageView = ({productData}) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const { loading, findCropAvailabilityById, registeredFarmers } = useFetchFarmers(); // Single hook usage here
   const { user, db } = useContext(AuthContext);
-  const [formData, setFormData] = useState({
+ const initialValues ={
     cropProduced: "",
     dateOfAvailability: "",
     dateSubmitted: "",
@@ -74,7 +75,7 @@ const EditProductPageView = ({productData}) => {
     price: "",
     specifications: [],
     imageUrl: null
-  });
+  };
   const validationSchema = Yup.object({
     cropProduced: Yup.string().required("Crop Produced is Required!"),
     farmer: Yup.object().shape({
@@ -98,7 +99,7 @@ const EditProductPageView = ({productData}) => {
     setValues,
     setFieldValue,
   } = useFormik({
-    initialValues: formData,
+    initialValues,
     validationSchema,
     enableReinitialize: true, 
     onSubmit: (values) => {
@@ -106,26 +107,26 @@ const EditProductPageView = ({productData}) => {
     },
   });
 
+  const getProduct = async () => {
+    try {
+      const item = await findCropAvailabilityById(id);
+      if( productData !== undefined){
+        
+        setValues(productData)
+      }else{
+        
+        setValues(item)
+      }
+      // console.log(item);
+    } catch (error) {
+      console.error("Failed to fetch product:", error);
+    }
+  };
 
   useEffect(() => {
-    if(!id) return;
-    const getProduct = async () => {
-      try {
-        const item = await findCropAvailabilityById(id);
-        if( productData !== undefined){
-          setFormData(productData);
-          setValues(productData)
-        }else{
-          setFormData(item);
-          setValues(item)
-        }
-        // console.log(item);
-      } catch (error) {
-        console.error("Failed to fetch product:", error);
-      }
-    };
+    
     getProduct();
-  }, [id, findCropAvailabilityById, productData]);
+  }, [getProduct]);
 
   if (loading) {
     return (
@@ -171,7 +172,7 @@ const EditProductPageView = ({productData}) => {
           const url = await getDownloadURL(uploadTask.snapshot.ref);
           console.log("URL", url);
           setDownloadURL(url);
-          setFieldValue('imageUrl', url);
+         
         }
       );
 
@@ -198,7 +199,7 @@ const EditProductPageView = ({productData}) => {
       toast("User not authenticated");
       navigate("/login");
     }
-    await handleUpload()
+    const url = await handleUpload()
 
     const userId = values?.farmer.userId;
     const farmerId = values?.farmer.id;
@@ -220,12 +221,12 @@ const EditProductPageView = ({productData}) => {
           remarks: values?.remarks,
           price: values?.price,
           specifications: values?.specifications,
-          imageUrl: values.imageUrl
+          imageUrl: url || "/static/user/user-11.png" 
         },
         {merge: true},
       );
       toast.success("Form Submitted successfully! Thank you!");
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       console.error("Error adding document: ", error);
       toast.error(`Failed to Submit Form ${error}`);
@@ -291,9 +292,7 @@ const EditProductPageView = ({productData}) => {
                         name="farmer"
                         onChange={handleChange}
                         error={Boolean(touched.farmer?.id && errors.farmer?.id)}
-                        renderValue={(farmer)=> {
-                          return <h5>{farmer?.farmerName}</h5>
-                      }}
+                      
                       >
                         {registeredFarmers.map((farmer) => (
                           <MenuItem key={farmer.id} value={farmer}>

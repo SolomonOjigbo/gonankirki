@@ -32,7 +32,7 @@ export const navigations = [
     path: "/dashboard/users/all-farmers"
   }, ]
 }, {
-  name: "Crop Availablity Data",
+  name: "Commodities/Products",
   icon: duotone.AdminEcommerce,
   children: [{
     name: "All Submissions",

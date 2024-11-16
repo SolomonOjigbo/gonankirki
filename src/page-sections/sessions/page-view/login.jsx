@@ -65,7 +65,6 @@ const LoginView = () => {
       try {
         setIsLoading(true);
         await signInWithEmail(values.email, values.password);
-        setError(null);
         setIsLoading(false);
         navigate("/dashboard/users/all-farmers");
       } catch (error) {

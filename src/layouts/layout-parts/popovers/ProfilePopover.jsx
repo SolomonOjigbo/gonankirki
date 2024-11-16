@@ -37,7 +37,7 @@ const ProfilePopover = () => {
   const anchorRef = useRef(null);
   const navigate = useNavigate();
   const {
-    logout
+    logout, user
   } = useAuth();
   const [open, setOpen] = useState(false);
 
@@ -48,22 +48,22 @@ const ProfilePopover = () => {
 
   return <Fragment>
       <StyledButtonBase ref={anchorRef} onClick={() => setOpen(true)}>
-        <AvatarLoading alt="user" percentage={60} src="/static/user/user-11.png" sx={{
+        <AvatarLoading alt="user" percentage={60} src={user ? user.photoURL : "/static/user/user-11.png" } sx={{
         width: 35,
         height: 35
       }} />
       </StyledButtonBase>
 
       <PopoverLayout hiddenViewButton maxWidth={230} minWidth={200} popoverOpen={open} anchorRef={anchorRef} popoverClose={() => setOpen(false)} title={<FlexBox alignItems="center" gap={1}>
-            <Avatar src="/static/user/user-11.png" sx={{
+            <Avatar src={user ? user.photoURL : "/static/user/user-11.png" } sx={{
         width: 35,
         height: 35
       }} />
 
             <Box>
-              <H6 fontSize={14}>Aaron Cooper</H6>
+              <H6 fontSize={14}>{user.displayNmae}</H6>
               <Small color="text.secondary" display="block">
-                aaron@example.com
+                {user.email}
               </Small>
             </Box>
           </FlexBox>}>

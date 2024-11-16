@@ -32,6 +32,31 @@ import { useParams } from "next/navigation";
 import { auth } from "config/firebase";
 import useNavigate from "hooks/useNavigate";
 import { getAllFarmerIds } from "hooks/getAllIds";
+
+//===========================================================================
+export async function getStaticPaths() {
+
+  const paths = getAllFarmerIds();
+  return {
+    paths,
+    fallback: true,
+  };
+}
+
+export async function getStaticProps({ params }) {
+  const {findFarmerById} = useFetchFarmers();
+  const farmer = findFarmerById(params.id);
+  console.log(farmer)
+  return {
+    props: {
+      farmer,
+    },
+  };
+}
+
+
+
+
 // ==========================================================================
 
 const EditFarmerForm = ({farmer}) => {
@@ -51,7 +76,7 @@ const EditFarmerForm = ({farmer}) => {
   const [lga, setLga] = useState(null);
   const [lgaList, setLgaList] = useState([]);
   const [cityState, setCityState] = useState(null);
-  const [formData, setFormData] = useState({
+  const initialValues ={
     farmerName: '',
     farmerPhoneNumber: '',
     age: '',
@@ -68,25 +93,18 @@ const EditFarmerForm = ({farmer}) => {
     farmSize: '',
     photoUrl: null,
     farmLandPhotoUrl: null
-  });
+  };
 
   
-  useEffect(() => {
-   
-      const fetchFarmerData = async () => {
-       const farmerData = findFarmerById(id)
-        if(farmer !== undefined) {
-          
-          setFormData(farmer);
-          setValues(farmer); // Initialize form values
-          setDownloadURL(farmer?.photoUrl);
-        } else {
-          setFormData(farmerData);  // Farmer data is now correctly set
-          setValues(farmerData); // Initialize form values
-          setDownloadURL(farmer?.photoUrl);
-        } 
-     }
+  const fetchFarmerData = async() => {
+    if(!loading){
+
+      const farmerData = findFarmerById(id)
+      setValues(farmerData); // Initialize form values
+    }
     
+ }
+  useEffect(() => {
       fetchFarmerData();
   }, [id,findFarmerById, farmer]);
 
@@ -100,27 +118,9 @@ const EditFarmerForm = ({farmer}) => {
     touched,
     setFieldValue
   } = useFormik({
-    initialValues:{
-      farmerName: '',
-    farmerPhoneNumber: '',
-    age: '',
-    gender: '',
-    numberOfEmployees: '',
-    numberOfDependents: '',
-    averageIncome: '',
-    conflictImpact: '',
-    farmLocation: '',
-    farmerLGA: '',
-    farmerState: '',
-    farmerAddress: '',
-    cropsProduced: [],
-    farmSize: '',
-    photoUrl: null,
-    farmLandPhotoUrl: null,
-     ...formData,
-    },
+    initialValues,
     // validationSchema,
-    enableReinitialize: true,
+    // enableReinitialize: true,
     onSubmit: values => handleSubmitForm(values)
   });
 
@@ -137,9 +137,12 @@ const EditFarmerForm = ({farmer}) => {
   }, [lgaOptionsData]);
 
   const onDrop = useCallback((acceptedFiles) => {
-    console.log("PHOTO:", acceptedFiles)
-    setFieldValue("photoUrl",acceptedFiles[0]);
-    setSelectedFile(acceptedFiles[0]);
+    const files = acceptedFiles.map(file => Object.assign(file,{
+      preview: URL.createObjectURL(file),
+    }))
+    console.log("PHOTO:", files[0].preview)
+    setFieldValue("photoUrl", files[0].preview);
+    setSelectedFile(files[0].preview);
   }, []);
 
   const { getRootProps, getInputProps } = useDropzone({ 
@@ -247,7 +250,7 @@ const EditFarmerForm = ({farmer}) => {
             <AvatarBadge badgeContent={<label htmlFor="icon-button-file" {...getRootProps()} >
               <input {...getInputProps()} />
 
-                  <IconButton aria-label="upload picture" component="span" onClick={onDrop}>
+                  <IconButton aria-label="upload picture" component="span">
                     <CameraAlt sx={{
                 fontSize: 16,
                 color: "background.paper"
@@ -278,9 +281,9 @@ const EditFarmerForm = ({farmer}) => {
             </Grid>
             <Grid item sm={6} xs={12}>
                 <InputLabel id="gender">Gender</InputLabel>
-                  <TextField
+                  <Select
                     fullWidth
-                    select
+                    
                     id="gender"
                     value={values?.gender}
                     name="gender"
@@ -291,7 +294,7 @@ const EditFarmerForm = ({farmer}) => {
                         {option.label}
                       </MenuItem>
                     ))}
-                  </TextField>
+                  </Select>
                 </Grid>
                 <Grid item sm={6} xs={12}>
               <TextField fullWidth name="farmLocation" label="GPS Location" variant="outlined" onBlur={handleBlur} value={values?.farmLocation} onChange={handleChange} error={Boolean(errors.farmLocation && touched.farmLocation)} helperText={touched.farmLocation && errors.farmLocation} />
@@ -313,7 +316,7 @@ const EditFarmerForm = ({farmer}) => {
                   >
                     {stateOptions.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
-                        {option.label}
+                        {option.value}
                       </MenuItem>
                     ))}
                   </TextField>
@@ -345,8 +348,8 @@ const EditFarmerForm = ({farmer}) => {
             </Grid>
             <Grid item sm={6} xs={12}>
             <InputLabel id="conflictImpact">Conflict Impact</InputLabel>
-                  <TextField
-                    select
+                  <Select
+                    
                     fullWidth
                     id="conflictImpact"
                     value={values?.conflictImpact}
@@ -356,10 +359,10 @@ const EditFarmerForm = ({farmer}) => {
                   >
                     {conflictOptions.map((option) => (
                       <MenuItem key={option} value={option.value}>
-                        {option.label}
+                        {option.value}
                       </MenuItem>
                     ))}
-                  </TextField>
+                  </Select>
                   </Grid>
                   <Grid item sm={6} xs={12}>
                   <InputLabel id="cropsProduced">Crops Produced</InputLabel>
@@ -405,25 +408,7 @@ const EditFarmerForm = ({farmer}) => {
 };
 
 
-export async function getStaticPaths() {
 
-  const paths = getAllFarmerIds();
-  return {
-    paths,
-    fallback: true,
-  };
-}
-
-export async function getStaticProps({ params }) {
-  const {findFarmerById} = useFetchFarmers();
-  const farmer = findFarmerById(params.id);
-  console.log(farmer)
-  return {
-    props: {
-      farmer,
-    },
-  };
-}
 
 
 export default EditFarmerForm;
