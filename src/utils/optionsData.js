@@ -905,6 +905,8 @@ export const ageGroups = [
     { label: '61-70 years', value: '61-70' },
   ];
 
+  
+
   export const incomeGroups = [
     { label: '₦50,000 - ₦500,000', value: '50k-500k' },
     { label: '₦500,000 - ₦1 million', value: '500k-1m' },
@@ -953,4 +955,11 @@ export const ageGroups = [
     {label: 'Others Specify', value: 'Others'},
   ]
 
-  
+  export const specifications = [
+    { label: "Dried", value: "Dried" },
+    { label: "Fresh", value: "Fresh" },
+    { label: "Organic", value: "Organic" },
+    { label: "Inorganic", value: "Inorganic" },
+    { label: "Clean", value: "Clean" },
+    { label: "Unclean", value: "Unclean" },
+  ];

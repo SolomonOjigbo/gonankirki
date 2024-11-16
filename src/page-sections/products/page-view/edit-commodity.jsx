@@ -37,30 +37,20 @@ import "react-toastify/dist/ReactToastify.css";
 import { collection, addDoc,setDoc, doc } from "firebase/firestore";
 import { AuthContext } from "contexts/firebaseContext";
 import { useParams } from "next/navigation";
-import { cropOptions } from "utils/optionsData";
+import { cropOptions, specifications } from "utils/optionsData";
 import Image from "next/image";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { storage } from "config/firebase";
 import useNavigate from "hooks/useNavigate";
 
-
-const specifications = [
-  { label: "Dried", value: "Dried" },
-  { label: "Fresh", value: "Fresh" },
-  { label: "Organic", value: "Organic" },
-  { label: "Inorganic", value: "Inorganic" },
-  { label: "Clean", value: "Clean" },
-  { label: "Unclean", value: "Unclean" },
-];
-
-const EditProductPageView = ({productData}) => {
+const EditProductPageView = () => {
   const params = useParams();
   const { id } = params;
   const navigate = useNavigate()
   const [selectedFile, setSelectedFile] = useState(null);
   const [downloadURL, setDownloadURL] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { loading, findCropAvailabilityById, registeredFarmers } = useFetchFarmers(); // Single hook usage here
+  const { loading, findCropAvailabilityById, registeredFarmers } = useFetchFarmers(); 
   const { user, db } = useContext(AuthContext);
  const initialValues ={
     cropProduced: "",
@@ -109,15 +99,13 @@ const EditProductPageView = ({productData}) => {
 
   const getProduct = async () => {
     try {
-      const item = await findCropAvailabilityById(id);
-      if( productData !== undefined){
+      const item = findCropAvailabilityById(id);
+      if( id !== undefined){
         
-        setValues(productData)
-      }else{
+      
         
         setValues(item)
       }
-      // console.log(item);
     } catch (error) {
       console.error("Failed to fetch product:", error);
     }
@@ -135,19 +123,6 @@ const EditProductPageView = ({productData}) => {
       </Box>
     );
   }
-
-
-
-  // const handleDropFile = (acceptedFiles) => {
-  //   const files = acceptedFiles.map((file) =>
-  //     Object.assign(file, {
-  //       preview: URL.createObjectURL(file),
-  //     })
-  //   );
-  //   selectedFile(files);
-  // };
-
-
  
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -175,7 +150,7 @@ const EditProductPageView = ({productData}) => {
          
         }
       );
-
+      return downloadURL;
     } catch (error) {
       toast(`Unexpected error: ${error.message}`);
     }
@@ -189,7 +164,7 @@ const EditProductPageView = ({productData}) => {
       })
     );
     setFieldValue("imageUrl",file[0]?.preview);
-    setSelectedFile(file[0]?.preview);
+    setSelectedFile(file[0]);
   };
 
 
@@ -272,7 +247,7 @@ const EditProductPageView = ({productData}) => {
                         id="cropProduced"
                         onBlur={handleBlur}
                         onChange={handleChange}
-                        value={values?.cropProduced|| []}
+                        value={values?.cropProduced|| ""}
                         error={Boolean(touched.cropProduced && errors.cropProduced)}
                       >
                         {cropOptions.map((crop, index) => (
@@ -290,12 +265,13 @@ const EditProductPageView = ({productData}) => {
                         value={values?.farmer}
                         onBlur={handleBlur}
                         name="farmer"
-                        onChange={handleChange}
-                        error={Boolean(touched.farmer?.id && errors.farmer?.id)}
-                      
+                        onChange={(e) => setFieldValue("farmer", registeredFarmers.find(farmer => farmer.id === e.target.value))}
+
+                        renderValue={() => farmer?.farmerName || "Select Farmer"}
                       >
+
                         {registeredFarmers.map((farmer) => (
-                          <MenuItem key={farmer.id} value={farmer}>
+                          <MenuItem key={farmer.id} value={farmer.id}>
                             {farmer.farmerName}
                           </MenuItem>
                         ))}
@@ -319,7 +295,8 @@ const EditProductPageView = ({productData}) => {
                       <DatePicker
                         label="Date of Availability"
                         value={values?.dateOfAvailability}
-                        onChange={(date) => setFieldValue("dateOfAvailability", date)}
+                        onChange={(date) => setFieldValue("dateOfAvailability", date ? date.toISOString() : "")}
+
                         renderInput={(params) => (
                           <TextField
                             {...params}
@@ -340,8 +317,8 @@ const EditProductPageView = ({productData}) => {
                         <DropZone onDrop={onDrop} />
                       </Card>
                       {
-                        values?.imageUrl ? 
-                        <Image src={values?.imageUrl} alt={values?.cropProduced} height={150} width={150}/> : <PhotoCamera sx={{ fontSize: 100, color: "grey.400" }} />
+                        (values?.imageUrl !==undefined || values?.imageUrl !==null) ?
+                        (<Image src={values?.imageUrl} alt={values?.cropProduced} height={150} width={150}/>) : <PhotoCamera sx={{ fontSize: 100, color: "grey.400" }} />
                       }
                       {uploadProgress > 0 && <Paragraph>Upload Progress: {uploadProgress}%</Paragraph>}
                       
@@ -370,7 +347,7 @@ const EditProductPageView = ({productData}) => {
                         multiple
                         fullWidth
                         id="specifications"
-                        value={values?.specifications|| []}
+                        value={Array.isArray(values?.specifications) ? values.specifications : []}
                         name="specifications"
                         onChange={handleChange}
                         input={<OutlinedInput label="Crops Specifications" />}
@@ -424,24 +401,6 @@ const EditProductPageView = ({productData}) => {
 
 
 
-export async function getStaticPaths() {
 
-    const paths = getAllCommodityIds();
-    return {
-      paths,
-      fallback: true,
-    };
-  }
-  
-  export async function getStaticProps({ params }) {
-    const {findCropAvailabilityById} = useFetchFarmers()
-    const productData = findCropAvailabilityById(params.id);
-
-    return {
-      props: {
-        productData,
-      },
-    };
-  }
 
 export default EditProductPageView;
