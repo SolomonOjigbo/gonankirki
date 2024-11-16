@@ -1,0 +1,34 @@
+{
+  "hosting": {
+    "source": ".",
+    "rewrites": [
+      {
+       
+        "destination": "/dashboard/products/edit-commodity/[id]/page.html",
+       "regex": "^/dashboard/products/edit\\-commodity/([^/]+?)(?:/)?$"
+      },{
+        
+        "destination": "/dashboard/products/edit-input-request/[id]/page.html",
+        "regex":"^/dashboard/products/edit\\-input\\-request/([^/]+?)(?:/)?$"
+      },
+      {
+        
+        "destination": "/dashboard/products/product-details/[id]/page.html",
+        "regex":"^/dashboard/products/product\\-details/([^/]+?)(?:/)?$"
+      },
+      {
+        
+        "destination": "/dashboard/users/farmers/[id]/page.html",
+        "regex":"^/dashboard/users/farmers/([^/]+?)(?:/)?$"
+      }
+    ],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "frameworksBackend": {
+      "region": "us-central1"
+    }
+  }
+}
