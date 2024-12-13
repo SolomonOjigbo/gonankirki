@@ -6,16 +6,13 @@ import useNavigate from "hooks/useNavigate"; // CUSTOM COMPONENTS
 import EditFarmerForm from "./EditFarmerForm";
 import { FlexBox } from "components/flexbox";
 import { Paragraph } from "components/typography";
-import { TableMoreMenuItem, TableMoreMenu } from "components/table"; // ==============================================================
-import useFetchFarmers from "hooks/useFetchFarmers";
-
-// ==============================================================
+import { TableMoreMenuItem, TableMoreMenu } from "components/table"; // 
 const UserTableRow = props => {
   const {
-    farmer,
+    bdsp,
     isSelected,
     handleSelectRow,
-    handleDeleteFarmer
+    handleDeleteBDSPUser
   } = props;
   const navigate = useNavigate();
   const [openMenuEl, setOpenMenuEl] = useState(null);
@@ -35,12 +32,12 @@ const UserTableRow = props => {
 
   return <TableRow hover>
       <TableCell padding="checkbox">
-        <Checkbox size="small" color="primary" checked={isSelected} onClick={event => handleSelectRow(event, farmer.id)} />
+        <Checkbox size="small" color="primary" checked={isSelected} onClick={event => handleSelectRow(event, bdsp.id)} />
       </TableCell>
 
       <TableCell padding="normal">
         <FlexBox alignItems="center" gap={2}>
-          {/* <Avatar src={farmer?.photoUrl} alt={user.name} variant="rounded" /> */}
+          {/* <Avatar src={bdsp?.photoUrl} alt={user.name} variant="rounded" /> */}
 
           <Box>
             <Paragraph fontWeight={500} color="text.primary" sx={{
@@ -49,39 +46,40 @@ const UserTableRow = props => {
               cursor: "pointer"
             }
           }}>
-              {farmer.displayName}
+              {bdsp.displayName}
             </Paragraph>
 
-            <Paragraph fontSize={13}>#{farmer.id.substring(0, 11)}</Paragraph>
+            <Paragraph fontSize={13}>#{bdsp.id.substring(0, 11)}</Paragraph>
           </Box>
         </FlexBox>
       </TableCell>
 
 
-      <TableCell padding="normal">{farmer.email}</TableCell>
-      <TableCell padding="normal">{farmer.phoneNumber}</TableCell>
-      <TableCell padding="normal">{farmer.farmerCount}</TableCell>
-      <TableCell padding="normal">{farmer.inputRequestsNum}</TableCell>
-      <TableCell padding="normal">{farmer.cropAvailabilityNum}</TableCell>
+      <TableCell padding="normal">{bdsp.email}</TableCell>
+      <TableCell padding="normal">{bdsp.phoneNumber}</TableCell>
+      <TableCell padding="normal">{bdsp.farmerCount}</TableCell>
+      <TableCell padding="normal">{bdsp.inputRequestsNum}</TableCell>
+      <TableCell padding="normal">{bdsp.cropAvailabilityNum}</TableCell>
 
-      <TableCell padding="normal">{farmer.dateRegistered}</TableCell>
+      <TableCell padding="normal">{bdsp.dateRegistered}</TableCell>
 
       <TableCell padding="normal">
         <TableMoreMenu open={openMenuEl} handleOpen={handleOpenMenu} handleClose={handleCloseOpenMenu}>
           <TableMoreMenuItem Icon={Edit} title="Edit" handleClick={() => {
           handleCloseOpenMenu();
-          setOpenModal(false);
-          setSelectedFarmer(farmer)
+          // setOpenModal(true);
+          // setSelectedFarmer(bdsp)
+          navigate(`/dashboard/bdsp-users/bdsp/${bdsp.id}`);
         }} />
           <TableMoreMenuItem Icon={DeleteOutline} title="Delete" handleClick={() => {
           handleCloseOpenMenu();
-          handleDeleteFarmer(farmer.id);
+          handleDeleteBDSPUser(bdsp.id);
         }} />
         </TableMoreMenu>
       </TableCell>
        {/* Edit Farmer Modal */}
        <Modal open={openModal} handleClose={handleCloseModal}>
-        <EditFarmerForm handleCancel={handleCloseModal} farmer={selectedFarmer} />
+        <EditFarmerForm handleCancel={handleCloseModal} bdsp={selectedFarmer} />
       </Modal>
     </TableRow>;
 };

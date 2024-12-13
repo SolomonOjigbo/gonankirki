@@ -7,8 +7,9 @@ import Twitch from "icons/Twitch";
 import Twitter from "icons/Twitter";
 import Youtube from "icons/Youtube";
 import PinterestCircle from "icons/PinterestCircle";
+import InputRequestListView from "./tables/InputRequestListView"
 
-const Campaigns = () => {
+const InputRequests = ({user, stats}) => {
   const theme = useTheme(); // CUSTOM DUMMY DATA
 
   const CAMPAIGN_LIST = [{
@@ -84,13 +85,16 @@ const Campaigns = () => {
     title: "Pinterest Posts",
     color: theme.palette.error.main
   }];
-  return <Box py={3}>
-      <Grid container spacing={3}>
+  return (
+  <Box py={3}>
+      {/* <Grid container spacing={3}>
         {CAMPAIGN_LIST.map(item => <Grid item md={4} sm={6} xs={12} key={item.id}>
             <CampaignCard Icon={item.icon} title={item.title} color={item.color} amount={item.amount} impression={item.impression} progressValue={item.progressValue} />
           </Grid>)}
-      </Grid>
-    </Box>;
+      </Grid> */}
+      <InputRequestListView stats={stats} user={user}/>
+    </Box>
+    );
 };
 
-export default Campaigns;
+export default InputRequests;

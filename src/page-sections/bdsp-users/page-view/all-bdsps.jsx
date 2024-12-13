@@ -1,44 +1,34 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import { Box, Card, CircularProgress, Table, TableBody, TableContainer, TablePagination } from "@mui/material"; // CUSTOM COMPONENTS
-
+import {
+  Box,
+  Card,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableContainer,
+  TablePagination,
+} from "@mui/material";
 import { Scrollbar } from "components/scrollbar";
-import { TableDataNotFound, TableToolbar } from "components/table"; // CUSTOM PAGE SECTION COMPONENTS
-
+import { TableDataNotFound, TableToolbar } from "components/table";
 import SearchArea from "../SearchArea";
 import HeadingArea from "../HeadingArea";
+import { getFirestore, collection, getDocs, updateDoc } from "firebase/firestore";
 import UserTableRow from "../UserTableRow";
-import UserTableHead from "../UserTableHead"; // CUSTOM DEFINED HOOK
-
-import useMuiTable, { getComparator, stableSort } from "hooks/useMuiTable"; // CUSTOM DUMMY DATA
+import UserTableHead from "../UserTableHead";
+import useMuiTable, { getComparator, stableSort } from "hooks/useMuiTable";
 import useFetchUsers from "hooks/useFetchUsers";
-import useFetchFarmers from "hooks/useFetchFarmers";
-// import { USER_LIST } from "__fakeData__/users";
+import { deleteDoc, doc } from "firebase/firestore";
+import { toast } from "react-toastify";
 
-
-const DataTable1PageView = () => {
-  // const [users, setUsers] = useState([...USER_LIST]);
-  // const { users, } = useFetchUsers();
+const AllBDSPsPageView = () => {
   const { users, loading, error } = useFetchUsers();
-  // const [userData, setUserData] = useState([]);
-  // const [farmers, setFarmers] = useState(userData);
-  const [farmersFilter, setFarmersFilter] = useState({
+  const [filteredBDSPs, setFilteredBDSPs] = useState([]);
+  const [bdspsFilter, setBdspsFilter] = useState({
     displayName: "",
-    search: ""
+    search: "",
+    isActivated: "",
   });
-
-
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     const data = await aggregateFormSubmissions();
-  //     setUserData(data);
-  //   };
-
-  //   fetchData();
-  // }, [aggregateFormSubmissions]);
-
 
   const {
     page,
@@ -51,32 +41,100 @@ const DataTable1PageView = () => {
     handleChangePage,
     handleRequestSort,
     handleSelectAllRows,
-    handleChangeRowsPerPage
+    handleChangeRowsPerPage,
   } = useMuiTable({
-    defaultOrderBy: "farmerName"
+    defaultOrderBy: "displayName",
   });
 
+
+
+const addPropertiesToUsers = async () => {
+  try {
+    const db = getFirestore(); // Initialize Firestore
+    const usersCollection = collection(db, "users"); // Replace 'users' with your collection name
+    const usersSnapshot = await getDocs(usersCollection);
+
+    if (usersSnapshot.empty) {
+      console.log("No users found.");
+      return;
+    }
+
+    // Iterate over each user document
+    const updatePromises = usersSnapshot.docs.map(async (userDoc) => {
+      const userData = userDoc.data();
+      const userRef = doc(db, "users", userDoc.id);
+
+      // Add or update the isActivated and isAdmin properties
+      await updateDoc(userRef, {
+        dateRegistered: "", // Default to false if not set
+        lastUpdated: ""
+      });
+    });
+
+    await Promise.all(updatePromises);
+
+    console.log("isActivated and isAdmin properties added to all users.");
+  } catch (error) {
+    console.error("Error updating user documents:", error);
+  }
+};
+
+
+
+
+  useEffect(()=>{
+    addPropertiesToUsers()
+    .then(() => console.log("Update complete"))
+    .catch((err) => console.error("Error updating users:", err));
+  }, [])
+
+  useEffect(() => {
+    // Apply filters when users or filters change
+    const filtered = stableSort(users, getComparator(order, orderBy)).filter((item) => {
+      const { displayName, search, isActivated } = bdspsFilter;
+      if (displayName && !item.displayName.toLowerCase().includes(displayName.toLowerCase())) return false;
+      if (search && !item.displayName.toLowerCase().includes(search.toLowerCase())) return false;
+      if (isActivated && isActivated !== "" && String(item.isActivated) !== isActivated) return false;
+      return true;
+    });
+    setFilteredBDSPs(filtered);
+  }, [users, bdspsFilter, order, orderBy]);
+
   const handleChangeFilter = (key, value) => {
-    setFarmersFilter(state => ({ ...state,
-      [key]: value
-    }));
+    setBdspsFilter((state) => ({ ...state, [key]: value }));
   };
 
   const handleChangeTab = (_, newValue) => {
-    handleChangeFilter("farmerLocation", newValue);
+    const filters = { ...bdspsFilter };
+    if (newValue === "recent") {
+      filters.isActivated = ""; // Clear activation filter
+    } else {
+      filters.isActivated = newValue === "isActivated" ? "true" : newValue === "Inactive" ? "false" : "";
+    }
+    setBdspsFilter(filters);
   };
 
-  let filteredFarmers = stableSort(users, getComparator(order, orderBy)).filter(item => {
-    if (farmersFilter.displayName) return item.displayName.toLowerCase() === farmersFilter.displayName;else if (farmersFilter.search) return item.name.toLowerCase().includes(farmersFilter.search.toLowerCase());else return true;
-  });
-
-  const handleDeleteFarmer = id => {
-    setFarmersFilter(state => state.filter(item => item.id !== id));
+  const handleDeleteBDSPUser = async (id) => {
+    try {
+      await deleteDoc(doc(db, "users", id));
+      toast.success("User deleted successfully!");
+      setFilteredBDSPs((prev) => prev.filter((user) => user.id !== id));
+    } catch (error) {
+      toast.error("Failed to delete BDSP");
+    }
   };
 
-  const handleAllFarmerDelete = () => {
-    setFarmers(state => state.filter(item => !selected.includes(item.id)));
-    handleSelectAllRows([])();
+  const handleAllBDSPsDelete = async () => {
+    try {
+      for (const id of selected) {
+        await deleteDoc(doc(db, "users", id));
+      }
+      toast.success("Selected users deleted successfully!");
+      setFilteredBDSPs((prev) => prev.filter((user) => !selected.includes(user.id)));
+      handleSelectAllRows([]);
+    } catch (error) {
+      toast.error("Failed to delete selected BDSPs");
+    }
   };
 
   if (loading) {
@@ -87,47 +145,68 @@ const DataTable1PageView = () => {
     );
   }
 
-  return <Box pt={2} pb={4}>
+  return (
+    <Box pt={2} pb={4}>
       <Card>
         <Box px={2} pt={2}>
-          <HeadingArea value={farmersFilter.displayName} changeTab={handleChangeTab} />
-
-          <SearchArea value={farmersFilter.search} gridRoute="/dashboard/users/user-grid-1" listRoute="/dashboard/users/user-list-1" onChange={e => handleChangeFilter("search", e.target.value)} />
+          <HeadingArea value={bdspsFilter.isActivated} changeTab={handleChangeTab} />
+          <SearchArea
+            value={bdspsFilter.search}
+            gridRoute="/dashboard/users/user-grid-1"
+            listRoute="/dashboard/users/user-list-1"
+            onChange={(e) => handleChangeFilter("search", e.target.value)}
+          />
         </Box>
 
-        {
-        /* TABLE ROW SELECTION HEADER  */
-      }
-        {selected.length > 0 && <TableToolbar selected={selected.length} handleDeleteRows={handleAllFarmerDelete} />}
+        {selected.length > 0 && (
+          <TableToolbar selected={selected.length} handleDeleteRows={handleAllBDSPsDelete} />
+        )}
 
-
-       
-
-        {
-        /* TABLE HEAD & BODY ROWS */
-      }
         <TableContainer>
           <Scrollbar autoHide={false}>
             <Table>
-              <UserTableHead order={order} orderBy={orderBy} numSelected={selected.length} rowCount={filteredFarmers.length} onRequestSort={handleRequestSort} onSelectAllRows={handleSelectAllRows(filteredFarmers.map(row => row.id))} />
+              <UserTableHead
+                order={order}
+                orderBy={orderBy}
+                numSelected={selected.length}
+                rowCount={filteredBDSPs.length}
+                onRequestSort={handleRequestSort}
+                onSelectAllRows={handleSelectAllRows(filteredBDSPs.map((row) => row.id))}
+              />
 
               <TableBody>
-                {filteredFarmers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(farmer => <UserTableRow key={farmer.id} farmer={farmer} isSelected={isSelected(farmer.id)} handleSelectRow={handleSelectRow} handleDeleteFarmer={handleDeleteFarmer} />)}
+                {filteredBDSPs
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((bdsp) => (
+                    <UserTableRow
+                      key={bdsp.id}
+                      bdsp={bdsp}
+                      isSelected={isSelected(bdsp.id)}
+                      handleSelectRow={handleSelectRow}
+                      handleDeleteBDSPUser={handleDeleteBDSPUser}
+                    />
+                  ))}
 
-                {filteredFarmers.length === 0 && <TableDataNotFound />}
+                {filteredBDSPs.length === 0 && <TableDataNotFound />}
               </TableBody>
             </Table>
           </Scrollbar>
         </TableContainer>
 
-        {
-        /* PAGINATION SECTION */
-      }
         <Box padding={1}>
-          <TablePagination page={page} component="div" rowsPerPage={rowsPerPage} count={filteredFarmers.length} onPageChange={handleChangePage} rowsPerPageOptions={[5, 10, 25]} onRowsPerPageChange={handleChangeRowsPerPage} />
+          <TablePagination
+            page={page}
+            component="div"
+            rowsPerPage={rowsPerPage}
+            count={filteredBDSPs.length}
+            onPageChange={handleChangePage}
+            rowsPerPageOptions={[5, 10, 25]}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
         </Box>
       </Card>
-    </Box>;
+    </Box>
+  );
 };
 
-export default DataTable1PageView;
+export default AllBDSPsPageView;

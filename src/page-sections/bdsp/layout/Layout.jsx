@@ -14,7 +14,7 @@ import DateRange from "icons/DateRange";
 import Bratislava from "icons/Bratislava";
 import MapMarkerIcon from "icons/MapMarkerIcon"; // CUSTOM UTILS METHOD
 
-import { format } from "utils/currency"; // STYLED COMPONENTS
+import useFetchStats from "hooks/useFetchStats";
 
 const ContentWrapper = styled(Box)({
   zIndex: 1,
@@ -50,14 +50,25 @@ const StyledTabList = styled(TabList)(({
 // =======================================================================
 const Layout = ({
   children,
-  handleTabList
+  handleTabList,
+  user
 }) => {
+
+  const { 
+    registeredFarmers, 
+    registeredBuyers, 
+    cropAvailabilityData, 
+    inputRequestData, 
+    loading, 
+    error 
+  } = useFetchStats(user.id);
+
   return <Fragment>
       <Card sx={{
       position: "relative"
     }}>
         <CoverPicWrapper>
-          <img width="100%" height="100%" alt="Team Member" src="/static/cover/user-cover-pic.png" style={{
+          <img width="100%" height="100%" alt="Team Member" src={user?.photURL|| user.avatar} style={{
           objectFit: "cover"
         }} />
         </CoverPicWrapper>
@@ -76,7 +87,7 @@ const Layout = ({
               }} />
                   </IconButton>
                 </label>}>
-              <AvatarLoading alt="user" borderSize={2} percentage={60} src="/static/user/user-11.png" sx={{
+              <AvatarLoading alt="user" borderSize={2} percentage={60} src={user?.photURL || '/static/user/user-11.png'} sx={{
               width: 100,
               height: 100
             }} />
@@ -85,29 +96,30 @@ const Layout = ({
 
           <Box mt={2}>
             <H6 fontSize={18} textAlign="center">
-              Pixy Krovasky
+              {user.displayName}
             </H6>
 
             <StyledFlexBetween paddingTop={1} maxWidth={340}>
-              <ListItem title="Developer" Icon={Bratislava} />
-              <ListItem title="New York" Icon={MapMarkerIcon} />
-              <ListItem title="Joined March 17" Icon={DateRange} />
+              <ListItem title={user.isAdmin ? "Admin" : "BDSP Agent" } Icon={Bratislava} />
+              <ListItem title={user?.location} Icon={MapMarkerIcon} />
+              <ListItem title={user.dateRegistered !==""? user.dateRegistered: "Joined December 2024"} Icon={DateRange} />
             </StyledFlexBetween>
           </Box>
 
-          <StyledFlexBetween paddingTop={4} maxWidth={400}>
-            <StatBox amount={`$${format(4550, "0,00")}`} title="Earnings" color="primary.main" />
-            <StatBox amount={format(60, "0,00")} title="Projects" color="success.600" />
-            <StatBox amount={`$${format(2800, "0,00")}`} title="Success Rate" color="warning.600" />
+          <StyledFlexBetween paddingTop={4} maxWidth={600}>
+            <StatBox amount={registeredFarmers.length > 0? registeredFarmers.length : 0 } title="Farmers Registered" color="primary.main" />
+            <StatBox amount={cropAvailabilityData.length > 0? cropAvailabilityData.length : 0} title="Commodities Submitted" color="warning.600" />
+            <StatBox amount={inputRequestData.length > 0? inputRequestData.length : 0 } title="Farm Inputs Requested" color="success.600" />
+            <StatBox amount={registeredBuyers.length>0 ? registeredBuyers.length : 0 } title="Buyers Registered" color="warning.600" />
           </StyledFlexBetween>
         </ContentWrapper>
 
         <StyledTabList variant="scrollable" onChange={handleTabList}>
           <Tab disableRipple label="Overview" value="1" />
-          <Tab disableRipple label="Projects" value="2" />
-          <Tab disableRipple label="Campaigns" value="3" />
-          <Tab disableRipple label="Documents" value="4" />
-          <Tab disableRipple label="Connections" value="5" />
+          <Tab disableRipple label="Farmers" value="2" />
+          <Tab disableRipple label="Input Requests" value="3" />
+          <Tab disableRipple label="Commodities" value="4" />
+          <Tab disableRipple label="Buyers" value="5" />
           <Tab disableRipple label="Activity" value="6" />
         </StyledTabList>
       </Card>

@@ -14,8 +14,12 @@ import CompleteRate from "../CompleteRate";
 import TopPerforming from "../TopPerforming";
 import SessionBrowser from "../SessionBrowser";
 import SalesByCountry from "../SalesByCountry";
+import CropAvailabilityPieChart from "../CropAvailabilityPieChart";
+import useFetchFarmers from "hooks/useFetchFarmers";
 
 const Analytics1PageView = () => {
+  const { registeredFarmers, cropAvailabilityData, inputRequestData, loading } = useFetchFarmers();  
+
   return <Box pt={2} pb={4}>
       <Grid container spacing={3}>
         {
@@ -29,7 +33,8 @@ const Analytics1PageView = () => {
         /* LIVER ONLINE USER CHART CARD */
       }
         <Grid item md={4} xs={12}>
-          <LiveUser />
+          <div style={{justifyContent: "center", alignItems: "center", fontWeight: "bold" }}>Commodity Availability Stats</div>
+          <CropAvailabilityPieChart cropAvailabilityData={cropAvailabilityData} loading={loading} />
         </Grid>
 
         {
@@ -49,7 +54,7 @@ const Analytics1PageView = () => {
         {
         /* COMPLETE GOAL AND RATES CHART CARD */
       }
-        <Grid item lg={3} xs={12}>
+        {/* <Grid item lg={3} xs={12}>
           <Stack spacing={3} sx={{
           "& > div": {
             flex: 1
@@ -62,13 +67,13 @@ const Analytics1PageView = () => {
             <CompleteGoal />
            
           </Stack>
-        </Grid>
+        </Grid> */}
 
         {
         /* SALES BY COUNTRY CHART CARD */
       }
         
-        <Grid item lg={3} xs={12}>
+        {/* <Grid item lg={3} xs={12}>
           <Stack spacing={3} sx={{
           "& > div": {
             flex: 1
@@ -81,11 +86,11 @@ const Analytics1PageView = () => {
             
             <CompleteRate />
           </Stack>
-        </Grid>
+        </Grid> */}
 
-        <Grid item md={4} xs={12}>
+        {/* <Grid item md={4} xs={12}>
           <SessionBrowser />
-        </Grid>
+        </Grid> */}
         {
         /* TOP PERFORMING PAGES CHART CARD */
       }

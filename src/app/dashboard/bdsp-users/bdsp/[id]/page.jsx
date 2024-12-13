@@ -1,4 +1,4 @@
-import ProfilePageView from "page-sections/profile/page-view";
+import ProfilePageView from "page-sections/bdsp/page-view";
 
 const ProfilePage = () => <ProfilePageView />;
 

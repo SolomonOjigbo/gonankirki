@@ -12,12 +12,9 @@ import { TableDataNotFound, TableToolbar } from "components/table"; // CUSTOM DE
 
 import useMuiTable, { getComparator, stableSort } from "hooks/useMuiTable"; // CUSTOM PAGE SECTION COMPONENTS
 
-import ProductTableRow from "../ProductTableRow";
-import ProductTableHead from "../ProductTableHead";
-import ProductTableActions from "../ProductTableActions"; // CUSTOM DUMMY DATA
-
-// import { PRODUCTS } from "__fakeData__/products"; //  STYLED COMPONENTS
-import useFetchFarmers from "hooks/useFetchFarmers";
+import ProductTableRow from "./ProductTableRow";
+import ProductTableHead from "./ProductTableHead";
+import ProductTableActions from "./ProductTableActions"; // CUSTOM DUMMY DATA
 import { id } from "date-fns/locale";
 import "react-toastify/dist/ReactToastify.css";
 import { toast, ToastContainer } from "react-toastify";
@@ -36,9 +33,9 @@ const ListWrapper = styled(FlexBetween)(({
   }
 }));
 
-const ProductListPageView = () => {
+const CommodityListView = ({stats}) => {
   const navigate = useNavigate();
-  const {cropAvailabilityData, loading,error } = useFetchFarmers();
+  const {cropAvailabilityData, loading, error} = stats
   const [cropsInfo, setCropsInfo] = useState([...cropAvailabilityData]);
   const {db} = useContext(AuthContext)
 
@@ -169,4 +166,4 @@ const ProductListPageView = () => {
     </Box>;
 };
 
-export default ProductListPageView;
+export default CommodityListView;

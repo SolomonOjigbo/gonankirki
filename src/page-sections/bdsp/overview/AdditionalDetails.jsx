@@ -10,29 +10,31 @@ import Education from "icons/Education";
 import UserOutlined from "icons/UserOutlined";
 import EmailOutlined from "icons/EmailOutlined";
 import BriefcaseOutlined from "icons/BriefcaseOutlined";
+import Call from "icons/Call";
+import { userAgent } from "next/server";
 
-const AdditionalDetails = () => {
+const AdditionalDetails = ({user}) => {
   const theme = useTheme();
   return <Card sx={{
     padding: 3
   }}>
       <FlexBetween>
-        <H6 fontSize={16}>Additional Details</H6>
+        <H6 fontSize={16}>Basic Details</H6>
         <MoreButton size="small" />
       </FlexBetween>
 
       <Stack mt={3} spacing={2}>
-        <ListItem title="Email" Icon={EmailOutlined} subTitle="Uilib@gmail.com" color={theme.palette.grey[400]} />
+        <ListItem title="Email" Icon={EmailOutlined} subTitle={user?.email} color={theme.palette.grey[400]} />
 
-        <ListItem Icon={Globe} title="Language" subTitle="English, Spanish" color={theme.palette.primary.main} />
+        <ListItem Icon={Call} title="Phone Number" subTitle={user?.phoneNumber} color={theme.palette.primary.main} />
 
-        <ListItem title="Nickname" subTitle="Pixy" Icon={UserOutlined} color={theme.palette.warning[600]} />
+        <ListItem title="Nickname" subTitle={user?.displayName} Icon={UserOutlined} color={theme.palette.warning[600]} />
 
-        <ListItem Icon={DateRange} title="Join Date" subTitle="Aug 15th, 2021" color={theme.palette.success.main} />
+        <ListItem Icon={DateRange} title="Join Date" subTitle={user?.dateRegistered? user.dateRegistered : "N/A"} color={theme.palette.success.main} />
 
-        <ListItem title="Work History" subTitle="Theme Forest" Icon={BriefcaseOutlined} color={theme.palette.error.main} />
+        <ListItem title="Location" subTitle={user.address ? user.address : "N/A"} Icon={BriefcaseOutlined} color={theme.palette.error.main} />
 
-        <ListItem Icon={Education} title="Education" subTitle="Cambridge University" color={theme.palette.warning.main} />
+        <ListItem Icon={Education} title="User Role" subTitle={user?.userRole} color={theme.palette.warning.main} />
       </Stack>
     </Card>;
 };

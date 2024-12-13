@@ -13,6 +13,7 @@ import {
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { SplashScreen } from "components/splash-screen";
+import { format } from "date-fns/esm";
 
 const initialAuthState = {
   user: null,
@@ -24,7 +25,7 @@ const db = getDbInstance();
 
 
 const actionCodeSettings = {
-  url: 'https://gonankirki-v2.firebaseapp.com/',
+  url: 'gonankirki-amber.vercel.app',
   handleCodeInApp: true,
 };
 
@@ -70,6 +71,9 @@ const signInWithGoogle = async () => {
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
+        isActivated: false,
+            isAdmin: false
+        
       });
       console.log("User record created successfully");
     } else {
@@ -93,6 +97,9 @@ const createUserWithEmail = async (email, password) => {
       await setDoc(userDocRef, {
         id: user.uid,
         email: user.email,
+        isActivated: false,
+            isAdmin: false,
+          dateRegistered: format(Date.now(), 'DD/MM/YYYY'),
       });
       console.log("User record created successfully");
     } else {
@@ -130,20 +137,30 @@ export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialAuthState);
 
   const init = useCallback(() => {
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async(user) => {
       if (user) {
-        dispatch({
-          type: "AUTH_STATE_CHANGED",
-          payload: {
-            isAuthenticated: true,
-            user: {
-              id: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL,
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+    
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+    
+          dispatch({
+            type: "AUTH_STATE_CHANGED",
+            payload: {
+              isAuthenticated: true,
+              user: {
+                id: user.uid,
+                email: user.email,
+                displayName: user.displayName,
+                photoURL: user.photoURL,
+                isAdmin: userData.isAdmin, // Include isAdmin field
+              },
             },
-          },
-        });
+          });
+        } else {
+          console.error("User document not found");
+        }
       } else {
         dispatch({
           type: "AUTH_STATE_CHANGED",
@@ -154,6 +171,7 @@ export const AuthProvider = ({ children }) => {
         });
       }
     });
+    
   }, []);
 
   useEffect(() => {
