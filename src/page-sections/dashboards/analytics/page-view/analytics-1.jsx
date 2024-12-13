@@ -14,7 +14,7 @@ import CompleteRate from "../CompleteRate";
 import TopPerforming from "../TopPerforming";
 import SessionBrowser from "../SessionBrowser";
 import SalesByCountry from "../SalesByCountry";
-import CropAvailabilityPieChart from "../CropAvailabilityPieChart";
+import CropAvailabilityPiechart from "../CropAvailabilityPiechart";
 import useFetchFarmers from "hooks/useFetchFarmers";
 
 const Analytics1PageView = () => {
@@ -34,7 +34,7 @@ const Analytics1PageView = () => {
       }
         <Grid item md={4} xs={12}>
           <div style={{justifyContent: "center", alignItems: "center", fontWeight: "bold" }}>Commodity Availability Stats</div>
-          <CropAvailabilityPieChart cropAvailabilityData={cropAvailabilityData} loading={loading} />
+          <CropAvailabilityPiechart cropAvailabilityData={cropAvailabilityData} loading={loading} />
         </Grid>
 
         {

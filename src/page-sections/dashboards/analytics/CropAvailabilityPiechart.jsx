@@ -18,7 +18,7 @@ const transformToChartData = (frequencyData) => {
   }));
 };
 
-const CropAvailabilityPieChart = ({ cropAvailabilityData, loading }) => {
+const CropAvailabilityPiechart = ({ cropAvailabilityData, loading }) => {
   const getCropFrequency = (cropList) => {
     return cropList.reduce((acc, curr) => {
       const cropName = curr.cropProduced;
@@ -73,4 +73,4 @@ const CropAvailabilityPieChart = ({ cropAvailabilityData, loading }) => {
   );
 };
 
-export default CropAvailabilityPieChart;
+export default CropAvailabilityPiechart;
