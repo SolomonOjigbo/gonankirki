@@ -9,9 +9,20 @@ import Add from "icons/Add";
 
 // Styled TabList wrapper
 const TabListWrapper = styled(TabList)(({ theme }) => ({
-  borderBottom: 0,
+  borderBottom: "1px solid",
+  borderColor: theme.palette.divider,
   [theme.breakpoints.down(727)]: {
     order: 3,
+  },
+}));
+
+// Styled Tab to highlight active tab with a bottom border
+const StyledTab = styled(Tab)(({ theme }) => ({
+  textTransform: "none",
+  fontWeight: 500,
+  "&.Mui-selected": {
+    color: theme.palette.primary.main,
+    // borderBottom: `3px solid ${theme.palette.primary.main}`,
   },
 }));
 
@@ -29,10 +40,9 @@ const HeadingArea = ({ value, changeTab }) => {
 
       <TabContext value={value}>
         <TabListWrapper variant="scrollable" onChange={changeTab}>
-          <Tab disableRipple label="All BDSPs" value="" />
-          {/* <Tab disableRipple label="Recently Registered" value="recent" /> */}
-          <Tab disableRipple label="Active" value="isActivated" />
-          <Tab disableRipple label="Inactive" value="Inactive" />
+          <StyledTab disableRipple label="All BDSPs" value="All BDSPs" />
+          <StyledTab disableRipple label="Active" value="Active" />
+          <StyledTab disableRipple label="Inactive" value="Inactive" />
         </TabListWrapper>
       </TabContext>
 

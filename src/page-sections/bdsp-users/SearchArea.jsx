@@ -1,15 +1,15 @@
 import { Box, IconButton, TextField } from "@mui/material";
-import Search from "@mui/icons-material/Search"; // CUSTOM DEFINED HOOK
+import Search from "@mui/icons-material/Search"; 
 
 import useNavigate from "hooks/useNavigate";
-import useLocation from "hooks/useLocation"; // CUSTOM COMPONENTS
+import useLocation from "hooks/useLocation"
 
-import { FlexBetween } from "components/flexbox"; // CUSTOM ICON COMPONENTS
+import { FlexBetween } from "components/flexbox";
 
 import Apps from "icons/Apps";
-import FormatBullets from "icons/FormatBullets"; // ==========================================================================================
+import FormatBullets from "icons/FormatBullets"; 
 
-// ==========================================================================================
+
 const SearchArea = props => {
   const {
     value = "",
@@ -45,11 +45,11 @@ const SearchArea = props => {
         }} />
         </IconButton>
 
-        <IconButton onClick={() => navigate(gridRoute)}>
+        {/* <IconButton onClick={() => navigate(gridRoute)}>
           <Apps sx={{
           color: activeColor(gridRoute)
         }} />
-        </IconButton>
+        </IconButton> */}
       </Box>
     </FlexBetween>;
 };

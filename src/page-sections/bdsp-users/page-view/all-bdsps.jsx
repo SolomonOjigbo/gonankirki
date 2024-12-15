@@ -13,16 +13,16 @@ import { Scrollbar } from "components/scrollbar";
 import { TableDataNotFound, TableToolbar } from "components/table";
 import SearchArea from "../SearchArea";
 import HeadingArea from "../HeadingArea";
-import { getFirestore, collection, getDocs, updateDoc } from "firebase/firestore";
+import { getFirestore, collection, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { toast } from "react-toastify";
 import UserTableRow from "../UserTableRow";
 import UserTableHead from "../UserTableHead";
 import useMuiTable, { getComparator, stableSort } from "hooks/useMuiTable";
 import useFetchUsers from "hooks/useFetchUsers";
-import { deleteDoc, doc } from "firebase/firestore";
-import { toast } from "react-toastify";
+import debounce from "lodash.debounce";
 
 const AllBDSPsPageView = () => {
-  const { users, loading, error } = useFetchUsers();
+  const { users, loading } = useFetchUsers();
   const [filteredBDSPs, setFilteredBDSPs] = useState([]);
   const [bdspsFilter, setBdspsFilter] = useState({
     displayName: "",
@@ -35,7 +35,6 @@ const AllBDSPsPageView = () => {
     order,
     orderBy,
     selected,
-    isSelected,
     rowsPerPage,
     handleSelectRow,
     handleChangePage,
@@ -46,72 +45,30 @@ const AllBDSPsPageView = () => {
     defaultOrderBy: "displayName",
   });
 
+  // Initialize Firestore
+  const db = getFirestore();
 
-
-const addPropertiesToUsers = async () => {
-  try {
-    const db = getFirestore(); // Initialize Firestore
-    const usersCollection = collection(db, "users"); // Replace 'users' with your collection name
-    const usersSnapshot = await getDocs(usersCollection);
-
-    if (usersSnapshot.empty) {
-      console.log("No users found.");
-      return;
-    }
-
-    // Iterate over each user document
-    const updatePromises = usersSnapshot.docs.map(async (userDoc) => {
-      const userData = userDoc.data();
-      const userRef = doc(db, "users", userDoc.id);
-
-      // Add or update the isActivated and isAdmin properties
-      await updateDoc(userRef, {
-        dateRegistered: "", // Default to false if not set
-        lastUpdated: ""
-      });
-    });
-
-    await Promise.all(updatePromises);
-
-    console.log("isActivated and isAdmin properties added to all users.");
-  } catch (error) {
-    console.error("Error updating user documents:", error);
-  }
-};
-
-
-
-
-  useEffect(()=>{
-    addPropertiesToUsers()
-    .then(() => console.log("Update complete"))
-    .catch((err) => console.error("Error updating users:", err));
-  }, [])
-
-  useEffect(() => {
-    // Apply filters when users or filters change
+  const filterBDSPs = () => {
     const filtered = stableSort(users, getComparator(order, orderBy)).filter((item) => {
-      const { displayName, search, isActivated } = bdspsFilter;
-      if (displayName && !item.displayName.toLowerCase().includes(displayName.toLowerCase())) return false;
-      if (search && !item.displayName.toLowerCase().includes(search.toLowerCase())) return false;
-      if (isActivated && isActivated !== "" && String(item.isActivated) !== isActivated) return false;
+      const { displayName = "", search = "", isActivated = "" } = bdspsFilter;
+      if (displayName && !item.displayName?.toLowerCase().includes(displayName.toLowerCase())) return false;
+      if (search && !item.displayName?.toLowerCase().includes(search.toLowerCase())) return false;
+      if (isActivated && String(item.isActivated) !== isActivated) return false;
       return true;
     });
     setFilteredBDSPs(filtered);
+  };
+
+  // Debounced filtering to improve performance
+  const debouncedFilterBDSPs = debounce(filterBDSPs, 300);
+
+  useEffect(() => {
+    debouncedFilterBDSPs();
+    return () => debouncedFilterBDSPs.cancel();
   }, [users, bdspsFilter, order, orderBy]);
 
   const handleChangeFilter = (key, value) => {
-    setBdspsFilter((state) => ({ ...state, [key]: value }));
-  };
-
-  const handleChangeTab = (_, newValue) => {
-    const filters = { ...bdspsFilter };
-    if (newValue === "recent") {
-      filters.isActivated = ""; // Clear activation filter
-    } else {
-      filters.isActivated = newValue === "isActivated" ? "true" : newValue === "Inactive" ? "false" : "";
-    }
-    setBdspsFilter(filters);
+    setBdspsFilter((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleDeleteBDSPUser = async (id) => {
@@ -124,11 +81,29 @@ const addPropertiesToUsers = async () => {
     }
   };
 
+  const handleChangeTab = (_, newValue) => {
+    const filters = { ...bdspsFilter };
+    switch (newValue) {
+      case "All BDSPs":
+        filters.isActivated = ""; // Show all
+        break;
+      case "Active":
+        filters.isActivated = "true"; // Show only active users
+        break;
+      case "Inactive":
+        filters.isActivated = "false"; // Show only inactive users
+        break;
+      default:
+        filters.isActivated = ""; // Fallback
+        break;
+    }
+    setBdspsFilter(filters);
+  };
+  
+
   const handleAllBDSPsDelete = async () => {
     try {
-      for (const id of selected) {
-        await deleteDoc(doc(db, "users", id));
-      }
+      await Promise.all(selected.map((id) => deleteDoc(doc(db, "users", id))));
       toast.success("Selected users deleted successfully!");
       setFilteredBDSPs((prev) => prev.filter((user) => !selected.includes(user.id)));
       handleSelectAllRows([]);
@@ -149,11 +124,15 @@ const addPropertiesToUsers = async () => {
     <Box pt={2} pb={4}>
       <Card>
         <Box px={2} pt={2}>
-          <HeadingArea value={bdspsFilter.isActivated} changeTab={handleChangeTab} />
+        <HeadingArea 
+  value={bdspsFilter.isActivated === "true" ? "Active" : bdspsFilter.isActivated === "false" ? "Inactive" : "All BDSPs"} 
+  changeTab={handleChangeTab} 
+/>
+
           <SearchArea
             value={bdspsFilter.search}
-            gridRoute="/dashboard/users/user-grid-1"
-            listRoute="/dashboard/users/user-list-1"
+            gridRoute="/dashboard/bdsp-users/all-bdsps/"
+            // listRoute="/dashboard/users/user-list-1"
             onChange={(e) => handleChangeFilter("search", e.target.value)}
           />
         </Box>
@@ -173,20 +152,16 @@ const addPropertiesToUsers = async () => {
                 onRequestSort={handleRequestSort}
                 onSelectAllRows={handleSelectAllRows(filteredBDSPs.map((row) => row.id))}
               />
-
               <TableBody>
-                {filteredBDSPs
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((bdsp) => (
-                    <UserTableRow
-                      key={bdsp.id}
-                      bdsp={bdsp}
-                      isSelected={isSelected(bdsp.id)}
-                      handleSelectRow={handleSelectRow}
-                      handleDeleteBDSPUser={handleDeleteBDSPUser}
-                    />
-                  ))}
-
+                {filteredBDSPs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((bdsp) => (
+                  <UserTableRow
+                    key={bdsp.id}
+                    bdsp={bdsp}
+                    isSelected={selected.includes(bdsp.id)}
+                    handleSelectRow={handleSelectRow}
+                    handleDeleteBDSPUser={handleDeleteBDSPUser}
+                  />
+                ))}
                 {filteredBDSPs.length === 0 && <TableDataNotFound />}
               </TableBody>
             </Table>
@@ -200,7 +175,7 @@ const addPropertiesToUsers = async () => {
             rowsPerPage={rowsPerPage}
             count={filteredBDSPs.length}
             onPageChange={handleChangePage}
-            rowsPerPageOptions={[5, 10, 25]}
+            rowsPerPageOptions={[10, 25, 50]}
             onRowsPerPageChange={handleChangeRowsPerPage}
           />
         </Box>

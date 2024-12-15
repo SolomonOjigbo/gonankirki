@@ -37,7 +37,7 @@ const headCells = [{
   id: "cropAvailabilityNum",
   numeric: true,
   disablePadding: false,
-  label: "cropAvailability Submissions"
+  label: "Crop Availability Submitted"
 }, 
 {
   id: "dateRegistered",

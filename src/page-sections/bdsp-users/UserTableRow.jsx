@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Avatar, Box, Checkbox, TableCell, TableRow } from "@mui/material";
-import { DeleteOutline, Edit } from "@mui/icons-material"; // CUSTOM DEFINED HOOK
+import { DeleteOutline, Edit, RemoveRedEye } from "@mui/icons-material"; // CUSTOM DEFINED HOOK
 import { Modal } from "components/modal";
 import useNavigate from "hooks/useNavigate"; // CUSTOM COMPONENTS
-import EditFarmerForm from "./EditFarmerForm";
 import { FlexBox } from "components/flexbox";
 import { Paragraph } from "components/typography";
 import { TableMoreMenuItem, TableMoreMenu } from "components/table"; // 
@@ -37,7 +36,7 @@ const UserTableRow = props => {
 
       <TableCell padding="normal">
         <FlexBox alignItems="center" gap={2}>
-          {/* <Avatar src={bdsp?.photoUrl} alt={user.name} variant="rounded" /> */}
+          <Avatar src={bdsp?.photoURL ? bdsp.photoURL : bdsp?.avatar} alt={bdsp?.displayName} variant="rounded" />
 
           <Box>
             <Paragraph fontWeight={500} color="text.primary" sx={{
@@ -65,10 +64,9 @@ const UserTableRow = props => {
 
       <TableCell padding="normal">
         <TableMoreMenu open={openMenuEl} handleOpen={handleOpenMenu} handleClose={handleCloseOpenMenu}>
-          <TableMoreMenuItem Icon={Edit} title="Edit" handleClick={() => {
+          <TableMoreMenuItem Icon={RemoveRedEye} title="View" handleClick={() => {
           handleCloseOpenMenu();
-          // setOpenModal(true);
-          // setSelectedFarmer(bdsp)
+          
           navigate(`/dashboard/bdsp-users/bdsp/${bdsp.id}`);
         }} />
           <TableMoreMenuItem Icon={DeleteOutline} title="Delete" handleClick={() => {
@@ -77,9 +75,9 @@ const UserTableRow = props => {
         }} />
         </TableMoreMenu>
       </TableCell>
-       {/* Edit Farmer Modal */}
+       {/* Edit BDSP Modal */}
        <Modal open={openModal} handleClose={handleCloseModal}>
-        <EditFarmerForm handleCancel={handleCloseModal} bdsp={selectedFarmer} />
+        {/* Edit BDSP Form */}
       </Modal>
     </TableRow>;
 };

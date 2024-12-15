@@ -106,9 +106,9 @@ const ProfilePageView = () => {
             <Buyers user={user} stats={stats}/>
           </TabPanel>
 
-          <TabPanel value="6">
+          {/* <TabPanel value="6">
             <Activity user={user} stats={stats}/>
-          </TabPanel>
+          </TabPanel> */}
         </Layout>
       </TabContext>
     </Box>

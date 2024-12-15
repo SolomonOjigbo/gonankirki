@@ -68,7 +68,7 @@ const Layout = ({
       position: "relative"
     }}>
         <CoverPicWrapper>
-          <img width="100%" height="100%" alt="Team Member" src={user?.photURL|| user.avatar} style={{
+          <img width="100%" height="100%" alt="Team Member" src="https://gonankirki.com/wp-content/uploads/2022/06/bg-11.jpg" style={{
           objectFit: "cover"
         }} />
         </CoverPicWrapper>
@@ -87,7 +87,7 @@ const Layout = ({
               }} />
                   </IconButton>
                 </label>}>
-              <AvatarLoading alt="user" borderSize={2} percentage={60} src={user?.photURL || '/static/user/user-11.png'} sx={{
+              <AvatarLoading alt="user" borderSize={2} percentage={60} src={user?.photoURL? user?.photoURL : user?.avatar ? user?.avatar : '/static/user/user-11.png'} sx={{
               width: 100,
               height: 100
             }} />
@@ -120,7 +120,7 @@ const Layout = ({
           <Tab disableRipple label="Input Requests" value="3" />
           <Tab disableRipple label="Commodities" value="4" />
           <Tab disableRipple label="Buyers" value="5" />
-          <Tab disableRipple label="Activity" value="6" />
+          {/* <Tab disableRipple label="Activity" value="6" /> */}
         </StyledTabList>
       </Card>
 
