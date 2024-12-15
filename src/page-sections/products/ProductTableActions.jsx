@@ -1,68 +1,57 @@
-import { styled, TextField, MenuItem, IconButton } from "@mui/material"; // CUSTOM DEFINED HOOK
-
-import useNavigate from "hooks/useNavigate"; // CUSTOM COMPONENTS
-
-import { FlexBox } from "components/flexbox"; // CUSTOM ICON COMPONENTS
-
+import { styled, TextField, IconButton } from "@mui/material";
+import useNavigate from "hooks/useNavigate";
+import { FlexBox } from "components/flexbox";
 import FormatBullets from "icons/FormatBullets";
-import Apps from "icons/Apps"; //  STYLED COMPONENTS
+import Apps from "icons/Apps";
 
-const Wrapper = styled(FlexBox)(({
-  theme
-}) => ({
+const Wrapper = styled(FlexBox)(({ theme }) => ({
   alignItems: "center",
   ".select": {
-    flex: "1 1 200px"
+    flex: "1 1 200px",
   },
   [theme.breakpoints.down(440)]: {
     ".navigation": {
-      display: "none"
-    }
-  }
-})); // ==============================================================
+      display: "none",
+    },
+  },
+}));
 
-// ==============================================================
-const ProductTableActions = ({
-  handleChangeFilter,
-  filter
-}) => {
+const ProductTableActions = ({ handleChangeFilter, filter }) => {
   const navigate = useNavigate();
-  const PUBLISH_PRODUCTS = [{
-    id: 1,
-    name: "All",
-    value: ""
-  }, {
-    id: 2,
-    name: "Published",
-    value: "published"
-  }, {
-    id: 3,
-    name: "Draft",
-    value: "draft"
-  }];
-  return <Wrapper gap={2} px={2} py={4}>
-      <TextField select fullWidth label="Publish" className="select" value={filter.publish} onChange={e => handleChangeFilter("publish", e.target.value)}>
-        {PUBLISH_PRODUCTS.map(({
-        id,
-        name,
-        value
-      }) => <MenuItem key={id} value={value}>
-            {name}
-          </MenuItem>)}
-      </TextField>
 
-      <TextField fullWidth label="Search by product name..." value={filter.search} onChange={e => handleChangeFilter("search", e.target.value)} />
+  return (
+    <Wrapper gap={2} px={2} py={4}>
+      {/* Search by Farmer Name */}
+      <TextField
+        fullWidth
+        label="Search by Farmer Name"
+        value={filter.farmerName}
+        onChange={(e) => handleChangeFilter("farmerName", e.target.value)}
+      />
 
+      {/* Search by Crop Produced */}
+      <TextField
+        fullWidth
+        label="Search by Crop Produced"
+        value={filter.cropProduced}
+        onChange={(e) => handleChangeFilter("cropProduced", e.target.value)}
+        sx={{ ml: 2 }}
+      />
+
+      {/* Navigation Buttons */}
       <FlexBox alignItems="center" className="navigation">
-        <IconButton>
+        {/* List View Button */}
+        <IconButton onClick={() => navigate("/dashboard/products/product-list-view")}>
           <FormatBullets color="primary" />
         </IconButton>
 
+        {/* Grid View Button */}
         <IconButton onClick={() => navigate("/dashboard/products/product-grid-view")}>
           <Apps />
         </IconButton>
       </FlexBox>
-    </Wrapper>;
+    </Wrapper>
+  );
 };
 
 export default ProductTableActions;

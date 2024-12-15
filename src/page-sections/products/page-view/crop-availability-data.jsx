@@ -1,102 +1,143 @@
+// Refactored ProductListPageView
 "use client";
 
-import { useContext, useState } from "react";
-import { Tab, Box, Tabs, Card, Table, styled, Button, TableBody, TableContainer, TablePagination, CircularProgress } from "@mui/material";
-import Add from "icons/Add"; // CUSTOM DEFINED HOOK
-
-import useNavigate from "hooks/useNavigate"; // CUSTOM COMPONENTS
-
-import { Scrollbar } from "components/scrollbar";
-import { FlexBetween } from "components/flexbox";
-import { TableDataNotFound, TableToolbar } from "components/table"; // CUSTOM DEFINED HOOK
-
-import useMuiTable, { getComparator, stableSort } from "hooks/useMuiTable"; // CUSTOM PAGE SECTION COMPONENTS
-
-import ProductTableRow from "../ProductTableRow";
-import ProductTableHead from "../ProductTableHead";
-import ProductTableActions from "../ProductTableActions"; // CUSTOM DUMMY DATA
-
-// import { PRODUCTS } from "__fakeData__/products"; //  STYLED COMPONENTS
+import React, { useState } from "react";
+import { DataGrid, GridToolbar, GridToolbarContainer, GridToolbarExport, GridToolbarExportContainer, GridToolbarQuickFilter } from "@mui/x-data-grid";
+import { Box, Typography, CircularProgress, IconButton } from "@mui/material";
+import { MoreVert } from "@mui/icons-material";
 import useFetchFarmers from "hooks/useFetchFarmers";
-import { id } from "date-fns/locale";
-import "react-toastify/dist/ReactToastify.css";
-import { toast, ToastContainer } from "react-toastify";
-import { deleteDoc, doc } from "firebase/firestore";
-import { AuthContext } from "contexts/firebaseContext";
+import Image from "next/image";
+import { Menu, MenuItem } from "@mui/material";
+import useNavigate from "hooks/useNavigate";
+import useFetchUsers from "hooks/useFetchUsers";
 
-const ListWrapper = styled(FlexBetween)(({
-  theme
-}) => ({
-  gap: 16,
-  [theme.breakpoints.down(440)]: {
-    flexDirection: "column",
-    ".MuiButton-root": {
-      width: "100%"
-    }
-  }
-}));
+
+const CustomToolbar = () => (
+  <GridToolbarContainer>
+    <GridToolbarQuickFilter placeholder="Search..." />
+    <GridToolbarExport csvOptions={{ fileName: "ProductList" }} />
+  </GridToolbarContainer>
+);
 
 const ProductListPageView = () => {
+  const { cropAvailabilityData, loading, error } = useFetchFarmers();
+  const { getBDSPUser} = useFetchUsers();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
   const navigate = useNavigate();
-  const {cropAvailabilityData, loading,error } = useFetchFarmers();
-  const [cropsInfo, setCropsInfo] = useState([...cropAvailabilityData]);
-  const {db} = useContext(AuthContext)
 
 
-  
-  const [productFilter, setProductFilter] = useState({
-    farmerName: "",
-    search: ""
-  });
-
-  const handleChangeFilter = (key, value) => {
-    setProductFilter(state => ({ ...state,
-      [key]: value
-    }));
+  const handleMoreActionsClick = (event, row) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedRow(row);
   };
-  
-  
-  const {
-    page,
-    order,
-    orderBy,
-    selected,
-    isSelected,
-    rowsPerPage,
-    handleSelectRow,
-    handleChangePage,
-    handleRequestSort,
-    handleSelectAllRows,
-    handleChangeRowsPerPage
-  } = useMuiTable({
-    defaultOrderBy: "farmerName"
-  });
-  let filteredCropAvailability = stableSort(cropAvailabilityData, getComparator(order, orderBy)).filter(item => {
-    if (productFilter.farmerName) return item.farmerName.toLowerCase() ===productFilter.farmerName; else if(productFilter.search) return  item.farmerName.toLowerCase().includes(productFilter.farmerName.toLowerCase());else return true;
-  });
 
-  const handleDeleteProduct = async(userId, farmerId, id) => {
+  const handleMoreActionsClose = () => {
+    setAnchorEl(null);
+    setSelectedRow(null);
+  };
+
+  const handleView = () => {
+    navigate(`/dashboard/products/product-details/${selectedRow.id}`);
+    handleMoreActionsClose();
+  };
+
+  const handleEdit = () => {
+    navigate(`/dashboard/products/edit-commodity/${selectedRow.id}`);
+    handleMoreActionsClose();
+  };
+
+  const handleDelete = async() => {
+    const{userId, farmerId, id} = selectedRow
     try {
-    const productDocRef = doc(db, 'users', userId, 'farmers', farmerId, 'CropAvailability', id);
-    
-     const isDeleted =  await deleteDoc(productDocRef)
-    
-
-    // Remove deleted farmer from state
-    if(isDeleted){
-
-      toast.success('Commodity deleted successfully!');
-      setCropsInfo(state => state.filter(item => item.id !== id));
+      const productDocRef = doc(
+        db,
+        "users",
+        userId,
+        "farmers",
+        farmerId,
+        "CropAvailability",
+        id
+      );
+      await deleteDoc(productDocRef);
+      toast.success("Commodity deleted successfully!");
+    } catch (error) {
+      toast.error("Failed to delete Commodity");
     }
-    
-  
-  } catch (error) {
- 
-    toast('Failed to delete Commodity');
-  }
-  
-
+    handleMoreActionsClose();
   };
+
+  const columns = [
+    {
+      field: "imageUrl",
+      headerName: "Crop Image",
+      flex: 1,
+      renderCell: (params) => (
+        <Image src={params.value} alt="Crop" height={50} width={50} />
+      ),
+    },
+    {
+      field: "cropProduced",
+      headerName: "Crop Produced",
+      flex: 1,
+      sortable: true,
+    },
+    {
+      field: "farmerName",
+      headerName: "Farmer Name",
+      flex: 1,
+      sortable: true,
+    },
+    {
+      field: "dateSubmitted",
+      headerName: "Date Submitted",
+      flex: 1,
+      sortable: true,
+    },
+    {
+      field: "quantityAvailable",
+      headerName: "Quantity Available",
+      flex: 1,
+      sortable: true,
+    },
+    {
+      field: "userId",
+      headerName: "BDSP Agent",
+      flex: 1,
+      sortable: true,
+      renderCell: (params) => {
+        const bdspName = getBDSPUser(params.value)
+        return(
+          <div>{bdspName.displayName}</div>
+        )
+      },
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      flex: 1,
+      sortable: false,
+      renderCell: (params) => (
+        <>
+          <IconButton
+            aria-label="more actions"
+            onClick={(event) => handleMoreActionsClick(event, params.row)}
+          >
+            <MoreVert />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMoreActionsClose}
+          >
+            <MenuItem onClick={handleView}>View</MenuItem>
+            <MenuItem onClick={handleEdit}>Edit</MenuItem>
+            <MenuItem onClick={handleDelete}>Delete</MenuItem>
+          </Menu>
+        </>
+      ),
+    },
+  ];
 
   if (loading) {
     return (
@@ -105,68 +146,39 @@ const ProductListPageView = () => {
       </Box>
     );
   }
+
   if (error) return <div>Error: {error.message}</div>;
-  
-  return <Box pt={2} pb={4}>
-    <ToastContainer
-            position="top-right"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="colored"
-          />
-      <ListWrapper>
-        
-        
 
-        <Button variant="contained" startIcon={<Add />} onClick={() => navigate("/dashboard/products/crop-availability-form")}>
-          Add New CropAvailability
-        </Button>
-      </ListWrapper>
+  return (
+    <Box p={3}>
+      {/* Page Header */}
+      <Typography variant="h5" mb={3}>
+        Commodities Available
+      </Typography>
 
-      <Card sx={{
-      mt: 4
-    }}>
-        {
-        /* SEARCH AND PUBLISH FILTER SECTION */
-      }
-        {/* <ProductTableActions filter={productFilter} handleChangeFilter={handleChangeFilter} /> */}
-
-        {
-        /* TABLE ROW SELECTION HEADER  */
-      }
-        {/* {selected.length > 0 && <TableToolbar selected={selected.length} handleDeleteRows={handleAllProductDelete} />} */}
-
-        {
-        /* TABLE HEAD AND ROW SECTION */
-      }
-        <TableContainer>
-          <Scrollbar>
-            <Table sx={{
-            minWidth: 820
-          }}>
-              <ProductTableHead order={order} orderBy={orderBy} numSelected={selected.length} rowCount={cropAvailabilityData.length} onRequestSort={handleRequestSort} onSelectAllRows={handleSelectAllRows(cropAvailabilityData.map(row => row.id))} />
-
-              <TableBody>
-                {cropAvailabilityData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(product => <ProductTableRow key={product.id} product={product} handleSelectRow={handleSelectRow} isSelected={isSelected(product.id)} handleDeleteProduct={handleDeleteProduct} />)}
-
-                {cropAvailabilityData.length === 0 &&   <TableDataNotFound />}
-              </TableBody>
-            </Table>
-          </Scrollbar>
-        </TableContainer>
-
-        {
-        /* PAGINATION SECTION */
-      }
-        <TablePagination page={page} component="div" rowsPerPage={rowsPerPage} count={cropAvailabilityData.length} onPageChange={handleChangePage} rowsPerPageOptions={[5, 10, 25]} onRowsPerPageChange={handleChangeRowsPerPage} />
-      </Card>
-    </Box>;
+      {/* Data Grid */}
+      <Box mt={3} height="600px">
+        <DataGrid
+          rows={cropAvailabilityData?.map((product, index) => ({
+            id: product.id,
+            ...product,
+          }))}
+          columns={columns}
+          pageSize={15}
+          rowsPerPageOptions={[15, 30, 50]}
+          slots={{
+            toolbar:  CustomToolbar,
+           
+          }}
+          sx={{
+            "& .MuiDataGrid-root": {
+              backgroundColor: "#fff",
+            },
+          }}
+        />
+      </Box>
+    </Box>
+  );
 };
 
 export default ProductListPageView;
