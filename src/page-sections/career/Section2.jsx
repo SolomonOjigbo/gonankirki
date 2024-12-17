@@ -37,7 +37,8 @@ const Section2 = () => {
         {JOBS.map(({
         id,
         title
-      }) => <Grid item key={id} lg={4} sm={6} xs={12}>
+      }) => 
+      <Grid item key={id} lg={4} sm={6} xs={12}>
             <StyledCard>
               <H6 mb={2} fontSize={24}>
                 {title}

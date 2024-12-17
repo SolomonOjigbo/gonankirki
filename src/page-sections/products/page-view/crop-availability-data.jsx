@@ -108,7 +108,7 @@ const ProductListPageView = () => {
       renderCell: (params) => {
         const bdspName = getBDSPUser(params.value)
         return(
-          <div>{bdspName.displayName}</div>
+          <div>{bdspName?.displayName}</div>
         )
       },
     },

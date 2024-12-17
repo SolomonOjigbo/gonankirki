@@ -1,4 +1,4 @@
-import { CreateTicketPageView } from "page-sections/support/page-view";
+import { CreateTicketPageView } from "page-sections/farm/page-view";
 
 const CreateTicketPage = () => <CreateTicketPageView />;
 

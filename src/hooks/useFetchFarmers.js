@@ -74,46 +74,37 @@ const useFetchFarmers = () => {
     return inputRequestData.find(request => request.id === id);
   }, [inputRequestData]);
 
+  // Retrieve all farmer IDs
+  const getAllFarmerIds = () => {
+    return registeredFarmers.map((farmer) => ({
+      params: { id: farmer.id },
+    }));
+  };
 
-  const getAllFarmerIds =()=> {
-    return registeredFarmers.map((farmers) => {
-      return {
-        params: {
-          id: farmers.id,
-        },
-      };
-    });
-  }
+  // Retrieve all input request IDs
+  const getAllInputRequestIds = () => {
+    return inputRequestData.map((request) => ({
+      params: { id: request.id },
+    }));
+  };
 
+  // Retrieve all commodity IDs
+  const getAllCommodityIds = () => {
+    return cropAvailabilityData.map((crop) => ({
+      params: { id: crop.id },
+    }));
+  };
+  
 
- const getAllInputRequestIds =()=> {
-    return inputRequestData.map((farmers) => {
-      return {
-        params: {
-          id: farmers.id,
-        },
-      };
-    });
-  }
- const getAllCommodityIds =()=> {
-    return cropAvailabilityData.map((farmers) => {
-      return {
-        params: {
-          id: farmers.id,
-        },
-      };
-    });
-  }
-
-  return { 
-    registeredFarmers, 
-    loading, 
-    findFarmerById, 
-    findCropAvailabilityById, 
-    findInputRequestById, 
-    error, 
-    cropAvailabilityData, 
-    inputRequestData, 
+  return {
+    registeredFarmers,
+    loading,
+    findFarmerById,
+    findCropAvailabilityById,
+    findInputRequestById,
+    error,
+    cropAvailabilityData,
+    inputRequestData,
     getAllFarmerIds,
     getAllCommodityIds,
     getAllInputRequestIds

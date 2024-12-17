@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Avatar, Box, Checkbox, TableCell, TableRow } from "@mui/material";
-import { DeleteOutline, Edit } from "@mui/icons-material"; // CUSTOM DEFINED HOOK
+import { DeleteOutline, Edit, RemoveRedEye } from "@mui/icons-material"; // CUSTOM DEFINED HOOK
 import { Modal } from "components/modal";
 import useNavigate from "hooks/useNavigate"; // CUSTOM COMPONENTS
 import EditFarmerForm from "./EditFarmerForm";
@@ -85,7 +85,14 @@ const UserTableRow = props => {
       <TableCell padding="normal">{farmer.dateRegistered}</TableCell>
 
       <TableCell padding="normal">
+        
         <TableMoreMenu open={openMenuEl} handleOpen={handleOpenMenu} handleClose={handleCloseOpenMenu}>
+        <TableMoreMenuItem Icon={RemoveRedEye} title="View" handleClick={() => {
+          handleCloseOpenMenu();
+          
+          navigate(`/dashboard/farm/${farmer.id}`);
+        }} /> 
+
           <TableMoreMenuItem Icon={Edit} title="Edit" handleClick={() => {
           handleCloseOpenMenu();
           // setOpenModal(true);

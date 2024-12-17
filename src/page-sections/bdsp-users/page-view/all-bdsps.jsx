@@ -120,6 +120,40 @@ const AllBDSPsPageView = () => {
     );
   }
 
+
+  // const removeFarmersCollection = async () => {
+  //   try {
+  //     // Reference the users collection
+  //     const usersCollectionRef = collection(db, "users");
+  
+  //     // Fetch all user documents
+  //     const usersSnapshot = await getDocs(usersCollectionRef);
+  
+  //     // Loop through each user document
+  //     for (const userDoc of usersSnapshot.docs) {
+  //       const userId = userDoc.id;
+  
+  //       // Reference the farmers subcollection for each user
+  //       const farmersCollectionRef = collection(db, "users", userId, "farmers");
+  
+  //       // Fetch all documents in the farmers subcollection
+  //       const farmersSnapshot = await getDocs(farmersCollectionRef);
+  
+  //       // Delete each farmer document in the subcollection
+  //       for (const farmerDoc of farmersSnapshot.docs) {
+  //         const farmerDocRef = doc(db, "users", userId, "farmers", farmerDoc.id);
+  //         await deleteDoc(farmerDocRef);
+  //       }
+  //     }
+  
+  //     toast.success("All farmers collections have been successfully removed.");
+  //   } catch (error) {
+  //     console.error("Error removing farmers collections:", error);
+  //     toast.error("Failed to remove farmers collections. Please try again.");
+  //   }
+  // };
+  
+
   return (
     <Box pt={2} pb={4}>
       <Card>

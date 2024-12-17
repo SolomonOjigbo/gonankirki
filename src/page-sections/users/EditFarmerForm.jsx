@@ -61,7 +61,7 @@ export async function getStaticProps({ params }) {
 
 const EditFarmerForm = ({farmer}) => {
   const downSm = useMediaQuery(theme => theme.breakpoints.down("sm"));
-  console.log("Farmer: ", farmer)
+ 
 
   const params = useParams()
   const { id } = params;
