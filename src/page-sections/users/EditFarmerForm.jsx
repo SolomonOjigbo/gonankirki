@@ -95,6 +95,19 @@ const EditFarmerForm = ({farmer}) => {
     farmLandPhotoUrl: null
   };
 
+  const getLocationText = (values) => {
+   
+
+    if (values.farmLocation && values.farmLocation !== undefined) {
+      return `Latitude: ${values.farmLocation.latitude}, Longitude: ${values.farmLocation.longitude}`;
+    }
+
+    if (location?.coords) {
+      return `Latitude: ${location.coords.latitude}, Longitude: ${location.coords.longitude}`;
+    }
+
+    return 'Farm Location Coordinates not Available';
+  };
   
   const fetchFarmerData = async() => {
     if(!loading){
@@ -297,7 +310,7 @@ const EditFarmerForm = ({farmer}) => {
                   </Select>
                 </Grid>
                 <Grid item sm={6} xs={12}>
-              <TextField fullWidth name="farmLocation" label="GPS Location" variant="outlined" onBlur={handleBlur} value={values?.farmLocation} onChange={handleChange} error={Boolean(errors.farmLocation && touched.farmLocation)} helperText={touched.farmLocation && errors.farmLocation} />
+              <TextField fullWidth name="farmLocation" label="GPS Location" variant="outlined" onBlur={handleBlur} value={getLocationText(values)} onChange={handleChange} error={Boolean(errors.farmLocation && touched.farmLocation)} helperText={touched.farmLocation && errors.farmLocation} />
             </Grid>
                 <Grid item sm={6} xs={12}>
                   
